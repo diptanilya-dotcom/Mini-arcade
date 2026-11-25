@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neon Arcade</title>
+<style>
+:root{--gold:#ffd166;--pink:#ff4fd8;--cyan:#54e7ff;--bg:#090914;--panel:#151528}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 50% -10%,#30204e 0,#090914 48%);color:#f7f3ff;font-family:Arial,sans-serif;min-height:100vh}
+header{display:flex;justify-content:space-between;align-items:center;padding:22px 7%;border-bottom:1px solid #ffffff18;gap:16px;flex-wrap:wrap}
+.logo{font-size:23px;font-weight:900;letter-spacing:2px;color:var(--gold);text-shadow:0 0 18px #ffd16666}
+nav a{color:#d8d4e8;text-decoration:none;margin-left:22px;font-size:14px}
+nav a:hover{color:var(--cyan)}
+.hero{text-align:center;padding:58px 20px 30px}
+.eyebrow{color:var(--cyan);letter-spacing:4px;font-size:12px;font-weight:bold}
+h1{font-size:clamp(38px,7vw,68px);margin:14px 0;background:linear-gradient(90deg,var(--gold),#fff,var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:#bcb7d0;max-width:570px;margin:0 auto;line-height:1.6}
+.wrap{max-width:1050px;margin:auto;padding:20px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}
+.card{background:linear-gradient(145deg,#1b1b35,#10101f);border:1px solid #ffffff18;border-radius:18px;padding:24px;box-shadow:0 12px 35px #0005}
+.icon{font-size:42px}
+.card h2{margin:12px 0 8px;font-size:21px}
+.card p{color:#aaa6c0;line-height:1.5;font-size:14px;min-height:42px}
+button{border:0;border-radius:10px;padding:12px 18px;background:linear-gradient(90deg,var(--gold),#ff9d4d);color:#191323;font-weight:800;cursor:pointer}
+button:hover{filter:brightness(1.12);transform:translateY(-1px)}
+button:disabled{opacity:.5;cursor:not-allowed;transform:none}
+button:focus-visible,a:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+.scorebar{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:20px auto}
+.pill{background:#ffffff12;border:1px solid #ffffff20;padding:10px 16px;border-radius:30px;color:#ddd8ee}
+.game{display:none;margin:24px auto 50px;max-width:700px;text-align:center}
+.game.active{display:block}
+.game-window{position:fixed;inset:0;z-index:1000;overflow:auto;background:radial-gradient(circle at 50% -10%,#30204e 0,#090914 58%);padding:20px;}
+.game-window .game{display:block!important;max-width:850px;margin:20px auto 50px}
+.game-window .gamebox{margin-top:0}
+.game-window .close-game{display:block;margin:0 auto 16px;background:#252542;color:#fff;border:1px solid #ffffff35}
+.gamebox{margin-top:16px;padding:26px;background:var(--panel);border:1px solid #ffffff20;border-radius:18px}
+.muted{color:#aaa6c0;font-size:13px;line-height:1.5}
+.wheel-wrap{position:relative;width:min(310px,78vw);margin:24px auto}
+.pointer{position:absolute;z-index:2;top:-8px;left:50%;transform:translateX(-50%);font-size:30px;color:white;text-shadow:0 2px 8px #000}
+#wheel,#euroWheel{width:100%;display:block;filter:drop-shadow(0 0 16px #ff4fd855);transition:transform 4s cubic-bezier(.12,.75,.12,1)}
+.result{min-height:26px;color:var(--gold);font-weight:bold;margin:14px 0}
+.case-row{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:20px 0}
+.case{background:#252542;border:1px solid #ffffff24;border-radius:14px;padding:18px 14px;min-width:130px}
+.case .icon{font-size:36px}
+.case strong{display:block;margin:8px 0}
+#dropBoard{width:100%;max-width:460px;height:390px;margin:18px auto;display:block;background:#0d0d1b;border:1px solid #ffffff20;border-radius:14px}
+.drop-controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;align-items:center}
+select{background:#24243e;color:white;border:1px solid #ffffff33;border-radius:9px;padding:11px}
+footer{text-align:center;color:#77728e;padding:35px 15px;border-top:1px solid #ffffff15;font-size:12px}
+@media(max-width:600px){header{justify-content:center}nav a{margin:0 8px}.hero{padding-top:42px}.gamebox{padding:18px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">✦ NEON ARCADE</div>
+  <nav><a href="#games">Игры</a><a href="#about">О проекте</a></nav>
+</header>
+<section class="hero">
+  <div class="eyebrow">ИГРАЙ БЕСПЛАТНО • СОБИРАЙ ОЧКИ • РАЗВЛЕКАЙСЯ</div>
+  <h1>NEON ARCADE</h1>
+  <p>Игры используют только виртуальные очки. В играх используются только виртуальные очки. Выбирай размер ставки; кейсы бесплатные.</p>
+  <div class="scorebar">
+    <div class="pill">⭐ Очки: <b id="points">0</b></div>
+    
+  </div>
+  <div style="max-width:420px;margin:18px auto" class="gamebox"><label for="promoCode">Промокод:</label> <input id="promoCode" type="text" placeholder="Введите промокод" style="background:#24243e;color:white;border:1px solid #ffffff33;border-radius:9px;padding:11px;width:55%;text-transform:uppercase"><button onclick="usePromo()">Активировать</button><div class="result" id="promoResult"></div></div>
+</section>
+<main class="wrap" id="games">
+  <div class="cards">
+    <article class="card"><div class="icon">🎡</div><h2>Колесо фортуны</h2><p>Запусти колесо за 10 очков и получи случайный бонус.</p><button onclick="openGame('wheelGame')">Открыть</button></article>
+    <article class="card"><div class="icon">🎁</div><h2>Кейсы</h2><p>Открывай бесплатные кейсы и получай виртуальный бонус.</p><button onclick="openGame('caseGame')">Открыть</button></article>
+    <article class="card"><div class="icon">🔵</div><h2>Падающий шарик</h2><p>Отпусти шарик сверху и смотри, в какую лунку он попадёт. Множители меняют только игровой счёт.</p><button onclick="openGame('dropGame')">Играть</button></article>
+    <article class="card"><div class="icon">🎰</div><h2>Рулетка 777</h2><p>Запускай бесплатное вращение символов. Три семёрки дают редкий суперприз — 1000 виртуальных монет.</p><button onclick="openGame('rouletteGame')">Играть</button></article>
+    <article class="card"><div class="icon">🎯</div><h2>Европейская рулетка</h2><p>Вращай колесо с числами от 0 до 36 и получай виртуальные очки.</p><button onclick="openGame('euroGame')">Играть</button></article>
+    <article class="card"><div class="icon">💣</div><h2>Мины</h2><p>Выбери количество мин и открывай безопасные клетки, чтобы набрать бонусные очки.</p><button onclick="openGame('minesGame')">Играть</button></article>
+  </div>
+
+  <section class="game" id="wheelGame"><div class="gamebox">
+    <h2>🎡 Колесо фортуны</h2><p class="muted">Бесплатный бонусный раунд. Нажми кнопку, чтобы прокрутить колесо.</p>
+    <div class="wheel-wrap"><div class="pointer">▼</div><canvas id="wheel" width="420" height="420"></canvas></div>
+    <label>Ставка: <input id="wheelBet" type="number" min="1" step="1" value="10"></label> <button id="spinBtn" onclick="spinWheel()">Крутить</button><div class="result" id="wheelResult"></div>
+  </div></section>
+
+  <section class="game" id="caseGame"><div class="gamebox">
+    <h2>🎁 Бесплатные кейсы</h2><p class="muted">Кейсы бесплатные и дают виртуальный бонус.</p>
+    <div class="case-row">
+      <div class="case"><div class="icon">🟦</div><strong>Синий кейс</strong><button onclick="openCase('Синий кейс',1,20)">Открыть бесплатно</button></div>
+      <div class="case"><div class="icon">🟪</div><strong>Фиолетовый</strong><button onclick="openCase('Фиолетовый кейс',1,20)">Открыть бесплатно</button></div>
+      <div class="case"><div class="icon">🟨</div><strong>Золотой кейс</strong><button onclick="openCase('Золотой кейс',1,20)">Открыть бесплатно</button></div>
+    </div><div class="result" id="caseResult"></div><p class="muted" id="caseCooldown">Проверяем доступность кейсов…</p>
+  </div></section>
+
+  <section class="game" id="dropGame"><div class="gamebox">
+    <h2>🔵 Падающий шарик</h2><p class="muted">Нажми «Бросить шарик». Он случайно отскакивает от штырьков и попадает в одну из лунок. Множитель — это бонус к счёту, а не ставка.</p>
+    <canvas id="dropBoard" width="460" height="390"></canvas>
+    <div class="drop-controls"><label>Ставка: <input id="dropBet" type="number" min="1" step="1" value="10"></label> <button id="dropBtn" onclick="dropBall()">Бросить шарик</button></div>
+    <div class="result" id="dropResult"></div>
+  </div></section>
+
+  <section class="game" id="rouletteGame"><div class="gamebox">
+    <h2>🎰 Рулетка 777</h2>
+    <p class="muted">Каждое вращение стоит 10 виртуальных очков. Три одинаковых символа дают +100, а три семёрки — суперприз.</p>
+    <div class="case-row" style="gap:14px;align-items:center">
+      <div class="case" id="reel1" style="font-size:48px;min-width:86px">❔</div>
+      <div class="case" id="reel2" style="font-size:48px;min-width:86px">❔</div>
+      <div class="case" id="reel3" style="font-size:48px;min-width:86px">❔</div>
+    </div>
+    <label>Ставка: <input id="slotBet" type="number" min="1" step="1" value="10"></label> <button id="rouletteBtn" onclick="spinRoulette()">Крутить</button>
+    <div class="result" id="rouletteResult"></div>
+    <details style="text-align:left;margin:18px auto 0;max-width:440px;color:#d8d4e8"><summary style="cursor:pointer;color:#54e7ff;font-weight:bold">Правила игры и шансы</summary><p class="muted">Три одинаковых символа дают 10× ставку. Три семёрки дают 100× ставку. Вероятность суперприза — 1 из 50 000 вращений. Каждое вращение стоит 10 виртуальных очков.</p></details>
+  </div></section>
+
+  <section class="game" id="minesGame"><div class="gamebox">
+    <h2>💣 Мины</h2><p class="muted">Выбери от 1 до 5 мин и открывай клетки. Выбери ставку перед началом раунда. Каждая безопасная клетка добавляет бонус, а попадание на мину завершает раунд.</p>
+    <div class="drop-controls"><label for="mineCount">Количество мин:</label><select id="mineCount"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select><label>Ставка: <input id="mineBet" type="number" min="1" step="1" value="10"></label><button id="mineStart" onclick="startMines()">Начать раунд</button><button id="mineCash" onclick="cashMines()" disabled>Забрать бонус</button></div>
+    <div id="mineBoard" style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;max-width:420px;margin:20px auto"></div><div class="result" id="mineResult"></div>
+  </div></section>
+
+  <section class="game" id="euroGame"><div class="gamebox">
+    <h2>🎯 Европейская рулетка</h2>
+    <p class="muted">Выбери ставку и тип прогноза. Выигрыши начисляются виртуальными очками.</p>
+    <div class="wheel-wrap"><div class="pointer">▼</div><canvas id="euroWheel" width="420" height="420"></canvas></div>
+    <div class="drop-controls"><label>Ставка: <input id="euroBet" type="number" min="1" step="1" value="10"></label><label>На что ставить: <select id="euroChoice"><option value="red">Красное (x2)</option><option value="black">Чёрное (x2)</option><option value="green">Зелёное 0 (x36)</option><option value="even">Чётное (x2)</option><option value="odd">Нечётное (x2)</option><option value="low">1–18 (x2)</option><option value="high">19–36 (x2)</option><option value="dozen1">1-я дюжина (x3)</option><option value="dozen2">2-я дюжина (x3)</option><option value="dozen3">3-я дюжина (x3)</option><option value="number">Точное число (x36)</option></select></label><input id="euroNumber" type="number" min="0" max="36" value="7" aria-label="Число для точной ставки"><button id="euroSpinBtn" onclick="spinEuroWheel()">Крутить рулетку</button></div>
+    <div class="result" id="euroResult"></div>
+  </div></section>
+</main>
+<footer>NEON ARCADE · Бесплатные игры на очки · Без ставок и денежных призов</footer>
+<script>
+let points=Number(localStorage.getItem('na_points')||0);
+let nextGameMultiplier=1;
+const $=id=>document.getElementById(id);
+function update(){ $('points').textContent=points; }
+function getBet(id){const n=Number($(id)?.value);return Number.isInteger(n)&&n>0?n:0;}
+function payForGame(bet){if(!Number.isInteger(bet)||bet<1){alert('Ставка должна быть целым числом от 1 и выше.');return false;}if(points<bet){alert(`Недостаточно очков! Нужно ${bet}, у тебя ${points}.`);return false;}points-=bet;localStorage.setItem('na_points',points);update();return true;}
+function addPoints(n){const awarded=Math.round(n*nextGameMultiplier);nextGameMultiplier=1;points+=awarded;localStorage.setItem('na_points',points);update();return awarded;}
+update();
+let activeGameWindow=null;
+function openGame(id){
+ closeGame();
+ const game=$(id);
+ activeGameWindow=document.createElement('div');
+ activeGameWindow.className='game-window';
+ activeGameWindow.innerHTML='<button class="close-game" onclick="closeGame()">← Назад к играм</button>';
+ document.body.appendChild(activeGameWindow);
+ game.classList.add('active');
+ activeGameWindow.appendChild(game);
+}
+function closeGame(){
+ if(!activeGameWindow)return;
+ const game=activeGameWindow.querySelector('.game');
+ if(game){game.classList.remove('active');$('games').appendChild(game);}
+ activeGameWindow.remove();
+ activeGameWindow=null;
+}
+const wheelValues=[0.5,1,100,2,5,10,25,50],wheelSymbols=['⭐','💎','👑','🍀','⚡','🌙','❤️','🪙'],wheelColors=['#ff4fd8','#6a5cff','#35c9e8','#36b879','#ffd166','#ff914d','#b46cff','#4c8dff'];
+let wheelAngle=0,wheelBusy=false,wheelUsed=false;
+function drawWheel(){
+ const c=$('wheel'),ctx=c.getContext('2d'),cx=210,cy=210,r=195;ctx.clearRect(0,0,420,420);
+ wheelValues.forEach((v,i)=>{const a=-Math.PI/2+i*2*Math.PI/8;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,a,a+2*Math.PI/8);ctx.closePath();ctx.fillStyle=wheelColors[i];ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=3;ctx.stroke();ctx.save();ctx.translate(cx,cy);ctx.rotate(a+Math.PI/8);ctx.fillStyle='#171326';ctx.font='bold 32px Arial';ctx.textAlign='center';ctx.fillText(wheelSymbols[i],115,10);ctx.restore();});
+ ctx.beginPath();ctx.arc(cx,cy,29,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();ctx.strokeStyle='#ffd166';ctx.lineWidth=6;ctx.stroke();
+}
+drawWheel();
+function spinWheel(){
+ if(wheelBusy||wheelUsed)return;
+ const bet=getBet("wheelBet");if(!payForGame(bet))return;
+ wheelBusy=true;$('spinBtn').disabled=true;$('wheelResult').textContent='Колесо крутится…';
+ const index=Math.floor(Math.random()*wheelValues.length),slice=360/8;
+ const target=360*5+(360-(index*slice+slice/2));
+ wheelAngle+=target;$('wheel').style.transform=`rotate(${wheelAngle}deg)`;
+ setTimeout(()=>{const prize=wheelValues[index];addPoints(prize);$('wheelResult').textContent=`Выпал символ ${wheelSymbols[index]} — +${prize} виртуальных очков!`;wheelBusy=false;wheelUsed=true;$('spinBtn').textContent='Раунд завершён';},4100);
+}
+// Европейская рулетка: колесо 0–36 с плавной анимацией вращения
+const euroNumbers=[0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
+const euroRed=new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+let euroAngle=0,euroBusy=false;
+function drawEuroWheel(){
+ const c=$('euroWheel'),ctx=c.getContext('2d'),cx=210,cy=210,r=195,step=2*Math.PI/37;
+ ctx.clearRect(0,0,420,420);
+ euroNumbers.forEach((n,i)=>{
+  const a=-Math.PI/2+i*step;
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,a,a+step);ctx.closePath();
+  ctx.fillStyle=n===0?'#159447':euroRed.has(n)?'#c83245':'#20202b';ctx.fill();
+  ctx.strokeStyle='#f7e8c8';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.save();ctx.translate(cx,cy);ctx.rotate(a+step/2);
+  ctx.fillStyle='#fff';ctx.font='bold 13px Arial';ctx.textAlign='center';ctx.fillText(String(n),r-22,4);ctx.restore();
+ });
+ ctx.beginPath();ctx.arc(cx,cy,27,0,Math.PI*2);ctx.fillStyle='#d5b36a';ctx.fill();ctx.strokeStyle='#fff0c2';ctx.lineWidth=4;ctx.stroke();
+}
+drawEuroWheel();
+function spinEuroWheel(){
+ if(euroBusy)return;const bet=getBet("euroBet");if(!payForGame(bet))return;
+ euroBusy=true;const btn=$('euroSpinBtn');btn.disabled=true;$('euroResult').textContent='Колесо вращается…';
+ const index=Math.floor(Math.random()*37),slice=360/37;
+ const target=360*6+(360-(index*slice+slice/2));
+ euroAngle+=target;$('euroWheel').style.transform=`rotate(${euroAngle}deg)`;
+ setTimeout(()=>{
+  const n=euroNumbers[index];const choice=$('euroChoice').value;const dozen=Math.ceil(n/12);let win=false,mult=2;
+  if(choice==='red')win=euroRed.has(n);
+  else if(choice==='black')win=n!==0&&!euroRed.has(n);
+  else if(choice==='green'){win=n===0;mult=36;}
+  else if(choice==='even')win=n!==0&&n%2===0;
+  else if(choice==='odd')win=n%2===1;
+  else if(choice==='low')win=n>=1&&n<=18;
+  else if(choice==='high')win=n>=19&&n<=36;
+  else if(choice.startsWith('dozen')){win=dozen===Number(choice.slice(-1));mult=3;}
+  else if(choice==='number'){win=n===Math.max(0,Math.min(36,Number($('euroNumber').value)));mult=36;}
+  const reward=win?bet*mult:0;if(reward)addPoints(reward);
+  $('euroResult').textContent=`Выпало число ${n}. ${win?`Выигрыш: +${reward} очков (включая ставку).`:'Ставка не выиграла.'}`;
+  euroBusy=false;btn.disabled=false;
+ },4100);
+}
+const CASE_COOLDOWN=24*60*60*1000;
+const CASE_READY_KEY='na_case_ready_at';
+function caseReadyAt(){return Number(localStorage.getItem(CASE_READY_KEY)||0);}
+function formatRemaining(ms){
+ const total=Math.max(0,Math.ceil(ms/1000));
+ const h=Math.floor(total/3600),m=Math.floor((total%3600)/60),s=total%60;
+ return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+function updateCaseCooldown(){
+ const remaining=caseReadyAt()-Date.now();
+ const buttons=document.querySelectorAll('.case button');
+ buttons.forEach(btn=>btn.disabled=remaining>0);
+ if(remaining>0){
+  $('caseCooldown').textContent=`Следующее открытие через: ${formatRemaining(remaining)}. Все кейсы снова станут доступны одновременно.`;
+ }else{
+  $('caseCooldown').textContent='Кейсы доступны! Можно открыть один бесплатный кейс.';
+ }
+}
+function openCase(name,min,max){
+ if(caseReadyAt()>Date.now()){updateCaseCooldown();return;}
+ const prize=Math.floor(Math.random()*(max-min+1))+min;addPoints(prize);
+ localStorage.setItem(CASE_READY_KEY,String(Date.now()+CASE_COOLDOWN));
+ $('caseResult').textContent=`${name}: внутри ${prize} виртуальных монет!`;
+ updateCaseCooldown();
+}
+updateCaseCooldown();
+setInterval(updateCaseCooldown,1000);
+const board=$('dropBoard'),ctx=board.getContext('2d');
+const rows=8,pegs=[];
+for(let r=0;r<rows;r++)for(let c=0;c<=r;c++)pegs.push({x:230+(c-r/2)*42,y:55+r*37});
+const multipliers=['5x','2x','1.5x','-0.5x','-0.5x','1.5x','2x','5x'];
+function drawBoard(ball=null){
+ ctx.clearRect(0,0,460,390);ctx.fillStyle='#0d0d1b';ctx.fillRect(0,0,460,390);
+ pegs.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,5,0,Math.PI*2);ctx.fillStyle='#d8d4ef';ctx.fill();});
+ const slotW=460/8;
+ multipliers.forEach((m,i)=>{ctx.fillStyle=['#a45cff','#5e8dff','#35b9be','#39a66b','#39a66b','#35b9be','#5e8dff','#a45cff'][i];ctx.fillRect(i*slotW+2,355,slotW-4,30);ctx.fillStyle='#101020';ctx.font='bold 14px Arial';ctx.textAlign='center';ctx.fillText(m,i*slotW+slotW/2,375);});
+ if(ball){ctx.beginPath();ctx.arc(ball.x,ball.y,9,0,Math.PI*2);ctx.fillStyle='#ffd166';ctx.shadowColor='#ffd166';ctx.shadowBlur=12;ctx.fill();ctx.shadowBlur=0;}
+}
+drawBoard();
+let dropping=false;
+function dropBall(){
+ if(dropping)return;const bet=getBet("dropBet");if(!payForGame(bet))return;dropping=true;$('dropBtn').disabled=true;$('dropResult').textContent='Шарик падает…';
+ let x=230,y=18,step=0,chosen=3;
+ const interval=setInterval(()=>{
+  y+=10;
+  if(step<rows&&y>pegs.filter(p=>p.y<y).length*1){x+=(Math.random()-.5)*26;step++;}
+  x=Math.max(12,Math.min(448,x));drawBoard({x,y});
+  if(y>=345){
+   clearInterval(interval);const slot=Math.max(0,Math.min(7,Math.floor(x/57.5)));const mult=[5,2,1.5,-0.5,-0.5,1.5,2,5][slot];const bonus=Math.round(mult*bet);
+   addPoints(bonus);drawBoard();$('dropResult').textContent=`Шарик попал в лунку ${multipliers[slot]} — ${bonus>=0?'бонус +':'списано '}${Math.abs(bonus)} очков!`;
+   dropping=false;$('dropBtn').disabled=false;
+  }
+ },65);
+}
+
+const rouletteSymbols=['🍒','🍋','🔔','💎','7️⃣','⭐','🍀'];
+let rouletteBusy=false;
+function spinRoulette(){
+ if(rouletteBusy)return;const bet=getBet("slotBet");if(!payForGame(bet))return;
+ rouletteBusy=true;
+ const btn=$('rouletteBtn');btn.disabled=true;
+ $('rouletteResult').textContent='Вращение…';
+ const reels=[$('reel1'),$('reel2'),$('reel3')];
+ const jackpot=Math.random()<(1/50000);
+ let finalSymbols=jackpot?['7️⃣','7️⃣','7️⃣']:[
+  rouletteSymbols[Math.floor(Math.random()*rouletteSymbols.length)],
+  rouletteSymbols[Math.floor(Math.random()*rouletteSymbols.length)],
+  rouletteSymbols[Math.floor(Math.random()*rouletteSymbols.length)]
+ ];
+ // Keep the jackpot probability exactly 1 in 50,000; ordinary random rolls cannot create triple sevens.
+ if(!jackpot&&finalSymbols.every(symbol=>symbol==='7️⃣')){
+  finalSymbols[2]='⭐';
+ }
+ let ticks=0;
+ const animation=setInterval(()=>{
+  reels.forEach(reel=>reel.textContent=rouletteSymbols[Math.floor(Math.random()*rouletteSymbols.length)]);
+  ticks++;
+  if(ticks>=14){
+   clearInterval(animation);
+   reels.forEach((reel,i)=>reel.textContent=finalSymbols[i]);
+   if(finalSymbols.every(symbol=>symbol==='7️⃣')){
+    addPoints(bet*100);
+    $('rouletteResult').textContent=`🎉 СУПЕРПРИЗ! ТРИ СЕМЁРКИ — +${bet*100} виртуальных очков!`;
+   }else if(finalSymbols[0]===finalSymbols[1]&&finalSymbols[1]===finalSymbols[2]){
+    addPoints(bet*10);
+    $('rouletteResult').textContent=`🎊 ТРИ ОДИНАКОВЫХ СИМВОЛА ${finalSymbols.join(' ')} — +${bet*10} виртуальных очков!`;
+   }else{
+    const bonus=Math.max(1,Math.round((Math.floor(Math.random()*5)+1)*bet/10));
+    addPoints(bonus);
+    $('rouletteResult').textContent=`Выпало ${finalSymbols.join(' ')}. Бонус +${bonus} виртуальных монет!`;
+   }
+   rouletteBusy=false;btn.disabled=false;
+  }
+ },110);
+}
+
+const PROMOS={
+ 'HUESOS228':{points:100,multiplier:2},
+ 'ARCADE100':{points:100},
+ 'NEON250':{points:250},
+ 'START500':{points:500},
+ 'LUCKY777':{points:777},
+ 'PLINKO1000':{points:1000},
+ 'MINES1500':{points:1500},
+ 'WHEEL2026':{points:2026},
+ 'BONUS5000':{points:5000},
+ 'SUKAKAKTUSDELALBLUAT':{points:20000}
+};
+function usePromo(){
+ const code=$('promoCode').value.trim().toUpperCase();
+ const promo=PROMOS[code];
+ if(!promo){$('promoResult').textContent='Промокод не найден.';return;}
+ const key='na_promo_used_'+code;
+ if(localStorage.getItem(key)){$('promoResult').textContent='Этот промокод уже использован.';return;}
+ localStorage.setItem(key,'1');
+ if(promo.multiplier)nextGameMultiplier=promo.multiplier;
+ addPoints(promo.points);
+ const extra=promo.multiplier?' и x2 к первой следующей игре':'';
+ $('promoResult').textContent=`Промокод активирован: +${promo.points} виртуальных монет${extra}!`;
+ $('promoCode').value='';
+}
+let mineSet=new Set(),mineRound=false,mineSafe=0,mineButtons=[],mineBetCurrent=10;
+function startMines(){
+ const bet=getBet("mineBet");if(!payForGame(bet))return;
+ const count=Number($('mineCount').value);mineBetCurrent=bet;mineSet.clear();mineSafe=0;mineRound=true;
+ while(mineSet.size<count)mineSet.add(Math.floor(Math.random()*25));
+ const board=$('mineBoard');board.innerHTML='';mineButtons=[];$('mineResult').textContent='Открывай клетки!';$('mineCash').disabled=true;
+ for(let i=0;i<25;i++){const b=document.createElement('button');b.textContent='?';b.style.padding='14px 0';b.style.fontSize='20px';b.onclick=()=>revealMineCell(i);board.appendChild(b);mineButtons.push(b);}
+ $('mineStart').textContent='Новый раунд';
+}
+function revealMineCell(i){
+ if(!mineRound||mineButtons[i].disabled)return;
+ const b=mineButtons[i];b.disabled=true;
+ if(mineSet.has(i)){b.textContent='💣';b.style.background='#a83252';mineRound=false;mineButtons.forEach((x,j)=>{if(mineSet.has(j))x.textContent='💣';x.disabled=true;});$('mineCash').disabled=true;$('mineResult').textContent=`Мина! Раунд завершён. Получено ${mineSafe*mineBetCurrent} бонусных очков.`;if(mineSafe)addPoints(mineSafe*mineBetCurrent);return;}
+ mineSafe++;b.textContent='💎';b.style.background='#247d85';$('mineCash').disabled=false;$('mineResult').textContent=`Безопасно! Бонус сейчас: ${mineSafe*mineBetCurrent} очков.`;
+}
+function cashMines(){if(!mineRound||mineSafe===0)return;mineRound=false;mineButtons.forEach(b=>b.disabled=true);const bonus=mineSafe*mineBetCurrent;addPoints(bonus);$('mineCash').disabled=true;$('mineResult').textContent=`Бонус забран: +${bonus} очков!`;}
+
+</script>
+</body>
+</html>
